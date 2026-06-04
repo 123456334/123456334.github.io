@@ -245,11 +245,11 @@ const MarkdownRenderer = {
     html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
 
-    // 链接
-    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
-
-    // 图片
+    // 图片（必须在链接之前处理）
     html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">');
+
+    // 链接（排除图片）
+    html = html.replace(/(?<!!)\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
 
     // 无序列表
     html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
