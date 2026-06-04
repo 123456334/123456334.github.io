@@ -103,6 +103,53 @@ function extractTagsFromPath(filePath, vaultPath) {
   return tags;
 }
 
+// 从文件名提取额外标签
+function extractTagsFromFilename(fileName) {
+  const tags = [];
+  const name = fileName.toLowerCase();
+
+  // 常见关键词映射
+  const keywords = {
+    'gpio': 'GPIO',
+    'i2c': 'I2C',
+    'spi': 'SPI',
+    'uart': 'UART',
+    'usart': '串口',
+    '串口': '串口',
+    'tim': '定时器',
+    'timer': '定时器',
+    'pwm': 'PWM',
+    'adc': 'ADC',
+    'dac': 'DAC',
+    'dma': 'DMA',
+    '中断': '中断',
+    'interrupt': '中断',
+    '蓝牙': '蓝牙',
+    'bluetooth': '蓝牙',
+    'wifi': 'WiFi',
+    'mpu': 'MPU',
+    '陀螺仪': '传感器',
+    '加速度': '传感器',
+    '滤波': '滤波',
+    'filter': '滤波',
+    'freertos': 'FreeRTOS',
+    'rtos': 'RTOS',
+    '烧录': '烧录',
+    '下载': '烧录',
+    '晶振': '晶振',
+    '时钟': '时钟',
+    'clock': '时钟',
+  };
+
+  for (const [keyword, tag] of Object.entries(keywords)) {
+    if (name.includes(keyword) && !tags.includes(tag)) {
+      tags.push(tag);
+    }
+  }
+
+  return tags;
+}
+
 // 解析 Markdown 文件
 function parseMdFile(filePath, vaultTag, imageMap, vaultPath) {
   try {
@@ -126,7 +173,7 @@ function parseMdFile(filePath, vaultTag, imageMap, vaultPath) {
 
     // 提取标题
     const titleMatch = content.match(/^#\s+(.+)$/m);
-    const title = titleMatch ? titleMatch[1] : fileName.replace(/_/g, ' ');
+    const title = titleMatch ? titleMatch[1] : fileName.replace(/_/g, ' ').replace(/^\d+\./, '').trim();
 
     // 生成 ID
     const id = fileName
@@ -138,9 +185,12 @@ function parseMdFile(filePath, vaultTag, imageMap, vaultPath) {
     // 从文件夹路径提取层级标签
     const folderTags = extractTagsFromPath(filePath, vaultPath);
 
-    // 合并标签，避免重复（忽略大小写）
+    // 从文件名提取额外标签
+    const filenameTags = extractTagsFromFilename(fileName);
+
+    // 合并所有标签，避免重复（忽略大小写）
     const tags = [];
-    const allTags = [vaultTag, ...folderTags];
+    const allTags = [vaultTag, ...folderTags, ...filenameTags];
     for (const tag of allTags) {
       const lowerTags = tags.map(t => t.toLowerCase());
       if (!lowerTags.includes(tag.toLowerCase())) {
