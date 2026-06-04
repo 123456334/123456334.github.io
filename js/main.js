@@ -71,6 +71,9 @@ const Blog = {
       html += `<div class="tag-group-title">${mainTag}</div>`;
 
       for (const [subTag, keywords] of Object.entries(subGroups)) {
+        // 使用组合标签: "父分类/子分类"
+        const combinedTag = `${mainTag}/${subTag}`;
+
         // 检查这个子分类是否有文章
         const hasPosts = POSTS.some(post =>
           post.tags.includes(mainTag) && post.tags.includes(subTag)
@@ -80,13 +83,14 @@ const Blog = {
         html += `<div class="tag-subgroup">`;
         html += `<span class="tag-subgroup-title">${subTag}</span>`;
 
-        // 添加子分类标签
-        html += `<span class="tag tag-sub ${this.currentTag === subTag ? 'active' : ''}" data-tag="${subTag}">${subTag}</span>`;
+        // 添加子分类标签（使用组合标签）
+        html += `<span class="tag tag-sub ${this.currentTag === combinedTag ? 'active' : ''}" data-tag="${combinedTag}" data-parent="${mainTag}">${subTag}</span>`;
 
-        // 添加关键词标签
+        // 添加关键词标签（使用组合标签）
         for (const kw of keywords) {
           if (tags.includes(kw)) {
-            html += `<span class="tag tag-keyword ${this.currentTag === kw ? 'active' : ''}" data-tag="${kw}">${kw}</span>`;
+            const kwCombinedTag = `${mainTag}/${kw}`;
+            html += `<span class="tag tag-keyword ${this.currentTag === kwCombinedTag ? 'active' : ''}" data-tag="${kwCombinedTag}" data-parent="${mainTag}">${kw}</span>`;
           }
         }
 
@@ -116,9 +120,18 @@ const Blog = {
 
     let posts = POSTS;
 
-    // 按标签筛选
+    // 按标签筛选（支持组合标签如 "STM32/模块"）
     if (this.currentTag) {
-      posts = getPostsByTag(this.currentTag);
+      if (this.currentTag.includes('/')) {
+        // 组合标签: "父分类/子分类"
+        const [parentTag, childTag] = this.currentTag.split('/');
+        posts = POSTS.filter(post =>
+          post.tags.includes(parentTag) && post.tags.includes(childTag)
+        );
+      } else {
+        // 普通标签
+        posts = getPostsByTag(this.currentTag);
+      }
     }
 
     // 按关键词搜索
@@ -128,14 +141,12 @@ const Blog = {
 
     // 同时应用标签和搜索
     if (this.currentTag && this.currentKeyword) {
-      posts = POSTS.filter(post => {
-        const matchTag = post.tags.includes(this.currentTag);
-        const kw = this.currentKeyword.toLowerCase();
-        const matchSearch = post.title.toLowerCase().includes(kw) ||
-          post.summary.toLowerCase().includes(kw) ||
-          post.tags.some(t => t.toLowerCase().includes(kw));
-        return matchTag && matchSearch;
-      });
+      const kw = this.currentKeyword.toLowerCase();
+      posts = posts.filter(post =>
+        post.title.toLowerCase().includes(kw) ||
+        post.summary.toLowerCase().includes(kw) ||
+        post.tags.some(t => t.toLowerCase().includes(kw))
+      );
     }
 
     if (posts.length === 0) {
