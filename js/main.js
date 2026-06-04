@@ -37,19 +37,57 @@ const Blog = {
     }
   },
 
-  // 渲染标签云
+  // 渲染标签云（按层级分组）
   renderTags() {
     const tagCloud = document.getElementById('tag-cloud');
     if (!tagCloud) return;
 
     const tags = getAllTags();
-    const html = `
+
+    // 按第一个标签（仓库名）分组
+    const groups = {};
+    const mainTags = ['STM32', 'ESP32', '硬件'];
+
+    tags.forEach(tag => {
+      // 找到这个标签属于哪个主分类
+      let group = '其他';
+      for (const mainTag of mainTags) {
+        // 检查哪些文章包含这个标签和主分类
+        const hasInGroup = POSTS.some(post =>
+          post.tags.includes(tag) && post.tags.includes(mainTag)
+        );
+        if (hasInGroup) {
+          group = mainTag;
+          break;
+        }
+      }
+
+      if (!groups[group]) groups[group] = [];
+      if (!groups[group].includes(tag)) {
+        groups[group].push(tag);
+      }
+    });
+
+    // 生成 HTML
+    let html = `
       <div class="tag-cloud-title">// 标签筛选</div>
-      <span class="tag ${!this.currentTag ? 'active' : ''}" data-tag="">全部</span>
-      ${tags.map(tag => `
-        <span class="tag ${this.currentTag === tag ? 'active' : ''}" data-tag="${tag}">${tag}</span>
-      `).join('')}
+      <span class="tag ${!this.currentTag ? 'active' : ''}" data-tag="">全部文章</span>
     `;
+
+    for (const [group, groupTags] of Object.entries(groups)) {
+      // 移除与组名重复的标签
+      const filteredTags = groupTags.filter(t => t !== group);
+
+      html += `
+        <div class="tag-group">
+          <div class="tag-group-title">${group}</div>
+          ${filteredTags.map(tag => `
+            <span class="tag ${this.currentTag === tag ? 'active' : ''}" data-tag="${tag}">${tag}</span>
+          `).join('')}
+        </div>
+      `;
+    }
+
     tagCloud.innerHTML = html;
 
     // 绑定标签点击事件
@@ -111,7 +149,10 @@ const Blog = {
         <h2 class="post-title">${post.title}</h2>
         <p class="post-summary">${post.summary}</p>
         <div class="post-tags">
-          ${post.tags.map(tag => `<span class="post-tag">${tag}</span>`).join('')}
+          ${post.tags.map((tag, i) =>
+            i > 0 ? `<span class="post-tag-separator">›</span><span class="post-tag">${tag}</span>`
+                  : `<span class="post-tag">${tag}</span>`
+          ).join('')}
         </div>
       </article>
     `).join('');
@@ -261,7 +302,9 @@ const PostPage = {
         <h1>${post.title}</h1>
         <div class="post-meta">
           <span class="post-date">${post.date}</span>
-          <span class="post-tags">${post.tags.join(' · ')}</span>
+          <span class="post-tags">${post.tags.map((tag, i) =>
+            i > 0 ? ` › ${tag}` : tag
+          ).join('')}</span>
         </div>
       `;
     }

@@ -329,7 +329,7 @@ a:hover {
   padding: var(--spacing-sm) var(--spacing-md);
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border-color);
-  border-radius: 50px;
+  border-radius: var(--radius-sm);
   font-size: 0.85rem;
   color: var(--text-secondary);
   cursor: pointer;
@@ -337,8 +337,7 @@ a:hover {
 }
 
 .tag::before {
-  content: '#';
-  color: var(--text-muted);
+  content: '📁';
   font-size: 0.75rem;
 }
 
@@ -352,7 +351,67 @@ a:hover {
 }
 
 .tag.active::before {
+  content: '📂';
+}
+
+/* 标签分组样式 */
+.tag-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tag-group:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.tag-group-title {
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--neon-purple);
+  margin-bottom: var(--spacing-xs);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.tag-group-title::before {
+  content: '▸';
   color: var(--neon-cyan);
+}
+
+/* 文章标签层级显示 */
+.post-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+
+.post-tag {
+  font-size: 0.75rem;
+  padding: 4px 12px;
+  background: rgba(0, 240, 255, 0.08);
+  border: 1px solid rgba(0, 240, 255, 0.15);
+  border-radius: var(--radius-sm);
+  color: var(--neon-cyan);
+  transition: var(--transition-fast);
+}
+
+.post-tag:hover {
+  background: rgba(0, 240, 255, 0.15);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+}
+
+.post-tag-separator {
+  color: var(--text-muted);
+  font-size: 0.7rem;
 }
 
 /* ===== 文章卡片 ===== */

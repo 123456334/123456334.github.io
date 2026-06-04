@@ -58,8 +58,43 @@ function copyImages(vaultPath) {
   return imageMap;
 }
 
+// 清理文件夹名称，生成可读标签
+function cleanFolderName(name) {
+  return name
+    .replace(/^(stm32|esp32|硬件)[_\-]?/i, '')  // 移除前缀
+    .replace(/图片介绍$/, '')                      // 移除"图片介绍"
+    .replace(/配置$/, '配置')                      // 保留"配置"
+    .trim() || name;
+}
+
+// 从文件路径提取层级标签
+function extractTagsFromPath(filePath, vaultPath) {
+  const relativePath = filePath.replace(/\\/g, '/');
+  const vaultNormalized = vaultPath.replace(/\\/g, '/');
+
+  // 获取相对于仓库的路径
+  const relPath = relativePath.replace(vaultNormalized, '');
+  const parts = relPath.split('/').filter(p => p && p !== '.');
+
+  const tags = [];
+
+  for (const part of parts) {
+    // 跳过 .obsidian、图片介绍、根目录文件夹
+    if (part === '.obsidian' || part === '图片介绍') continue;
+    if (part.endsWith('.md')) continue; // 跳过文件名
+
+    // 清理文件夹名称
+    const cleanName = cleanFolderName(part);
+    if (cleanName && !tags.includes(cleanName)) {
+      tags.push(cleanName);
+    }
+  }
+
+  return tags;
+}
+
 // 解析 Markdown 文件
-function parseMdFile(filePath, vaultTag, imageMap) {
+function parseMdFile(filePath, vaultTag, imageMap, vaultPath) {
   try {
     let content = fs.readFileSync(filePath, 'utf-8');
     const fileName = path.basename(filePath, '.md');
@@ -70,7 +105,6 @@ function parseMdFile(filePath, vaultTag, imageMap) {
       if (imageMap[cleanName]) {
         return `![${cleanName}](${imageMap[cleanName]})`;
       }
-      // 如果图片没找到，保留原样但添加提示
       return `![${cleanName}](assets/${cleanName})`;
     });
 
@@ -80,37 +114,20 @@ function parseMdFile(filePath, vaultTag, imageMap) {
     // 转换 Obsidian 高亮: ==text== -> **text**
     content = content.replace(/==([^=]+)==/g, '**$1**');
 
-    // 提取标题：取第一个 # 标题，或用文件名
+    // 提取标题
     const titleMatch = content.match(/^#\s+(.+)$/m);
     const title = titleMatch ? titleMatch[1] : fileName.replace(/_/g, ' ');
 
-    // 生成 ID：基于文件名
+    // 生成 ID
     const id = fileName
       .toLowerCase()
       .replace(/[^a-z0-9一-龥]/g, '-')
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '');
 
-    // 提取标签
-    const tags = [vaultTag];
-    const relativePath = filePath.replace(/\\/g, '/');
-    const pathParts = relativePath.split('/');
-
-    // 从目录名提取标签
-    for (const part of pathParts) {
-      if (part.includes('基础')) tags.push('基础');
-      if (part.includes('模块')) tags.push('模块');
-      if (part.includes('配置') || part.includes('config')) tags.push('配置');
-      if (part.includes('FreeRTOS') || part.includes('freertos')) tags.push('FreeRTOS');
-      if (part.includes('GPIO')) tags.push('GPIO');
-      if (part.includes('I2C') || part.includes('i2c')) tags.push('I2C');
-      if (part.includes('SPI')) tags.push('SPI');
-      if (part.includes('UART') || part.includes('usart')) tags.push('UART');
-      if (part.includes('tim') || part.includes('TIM')) tags.push('定时器');
-      if (part.includes('蓝牙') || part.includes('bluetooth')) tags.push('蓝牙');
-      if (part.includes('滤波') || part.includes('filter')) tags.push('滤波');
-      if (part.includes('mpu') || part.includes('MPU')) tags.push('传感器');
-    }
+    // 从文件夹路径提取层级标签
+    const folderTags = extractTagsFromPath(filePath, vaultPath);
+    const tags = [vaultTag, ...folderTags];
 
     // 去重
     const uniqueTags = [...new Set(tags)];
@@ -176,7 +193,7 @@ function main() {
     console.log(`   📝 找到 ${files.length} 个 .md 文件`);
 
     for (const file of files) {
-      const post = parseMdFile(file, vault.tag, imageMap);
+      const post = parseMdFile(file, vault.tag, imageMap, vault.path);
       if (post) {
         allPosts.push(post);
         console.log(`   ✅ ${post.title}`);
