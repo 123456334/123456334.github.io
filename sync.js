@@ -65,9 +65,9 @@ function cleanFolderName(name, isRoot) {
     return name.replace(/^blog[_\-]?/i, '');
   }
 
-  // 保留"图片介绍"作为分类
+  // 跳过"图片介绍"文件夹
   if (name.includes('图片介绍')) {
-    return '图片介绍';
+    return null;
   }
 
   return name
