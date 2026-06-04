@@ -373,17 +373,88 @@ a:hover {
 .tag-group-title {
   width: 100%;
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   color: var(--neon-purple);
-  margin-bottom: var(--spacing-xs);
+  margin-bottom: var(--spacing-sm);
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
+  font-weight: 600;
 }
 
 .tag-group-title::before {
   content: '▸';
   color: var(--neon-cyan);
+}
+
+/* 子分组样式 */
+.tag-subgroup {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding-left: var(--spacing-lg);
+  margin-bottom: var(--spacing-sm);
+  position: relative;
+}
+
+.tag-subgroup::before {
+  content: '├─';
+  position: absolute;
+  left: var(--spacing-sm);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.tag-subgroup:last-child::before {
+  content: '└─';
+}
+
+.tag-subgroup-title {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  min-width: 50px;
+}
+
+.tag-sub {
+  background: rgba(168, 85, 247, 0.1);
+  border-color: rgba(168, 85, 247, 0.2);
+  color: var(--neon-purple);
+  font-size: 0.8rem;
+}
+
+.tag-sub::before {
+  content: '📂';
+}
+
+.tag-sub:hover,
+.tag-sub.active {
+  background: rgba(168, 85, 247, 0.2);
+  border-color: var(--neon-purple);
+  color: var(--neon-purple);
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.2);
+}
+
+.tag-keyword {
+  background: rgba(0, 255, 136, 0.08);
+  border-color: rgba(0, 255, 136, 0.15);
+  color: var(--neon-green);
+  font-size: 0.75rem;
+}
+
+.tag-keyword::before {
+  content: '#';
+  font-size: 0.65rem;
+}
+
+.tag-keyword:hover,
+.tag-keyword.active {
+  background: rgba(0, 255, 136, 0.15);
+  border-color: var(--neon-green);
+  color: var(--neon-green);
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
 }
 
 /* 文章标签层级显示 */

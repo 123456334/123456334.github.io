@@ -44,29 +44,20 @@ const Blog = {
 
     const tags = getAllTags();
 
-    // 按第一个标签（仓库名）分组
-    const groups = {};
-    const mainTags = ['STM32', 'ESP32', '硬件'];
-
-    tags.forEach(tag => {
-      // 找到这个标签属于哪个主分类
-      let group = '其他';
-      for (const mainTag of mainTags) {
-        // 检查哪些文章包含这个标签和主分类
-        const hasInGroup = POSTS.some(post =>
-          post.tags.includes(tag) && post.tags.includes(mainTag)
-        );
-        if (hasInGroup) {
-          group = mainTag;
-          break;
-        }
+    // 定义层级结构
+    const hierarchy = {
+      'STM32': {
+        '基础': ['GPIO', 'I2C', 'SPI', '串口', '定时器', 'PWM', 'ADC', 'DMA', '中断', '烧录', '晶振', '时钟'],
+        '模块': ['MPU', 'mpu5060', '滤波', '蓝牙', '蓝牙通信'],
+        'Freertos': ['FreeRTOS', 'RTOS', 'freertos配置']
+      },
+      'ESP32': {
+        '模块': ['filter', 'mpu6000']
+      },
+      '硬件': {
+        '基础电路': []
       }
-
-      if (!groups[group]) groups[group] = [];
-      if (!groups[group].includes(tag)) {
-        groups[group].push(tag);
-      }
-    });
+    };
 
     // 生成 HTML
     let html = `
@@ -74,18 +65,35 @@ const Blog = {
       <span class="tag ${!this.currentTag ? 'active' : ''}" data-tag="">全部文章</span>
     `;
 
-    for (const [group, groupTags] of Object.entries(groups)) {
-      // 移除与组名重复的标签
-      const filteredTags = groupTags.filter(t => t !== group);
+    for (const [mainTag, subGroups] of Object.entries(hierarchy)) {
+      html += `<div class="tag-group">`;
+      html += `<div class="tag-group-title">${mainTag}</div>`;
 
-      html += `
-        <div class="tag-group">
-          <div class="tag-group-title">${group}</div>
-          ${filteredTags.map(tag => `
-            <span class="tag ${this.currentTag === tag ? 'active' : ''}" data-tag="${tag}">${tag}</span>
-          `).join('')}
-        </div>
-      `;
+      for (const [subTag, keywords] of Object.entries(subGroups)) {
+        // 检查这个子分类是否有文章
+        const hasPosts = POSTS.some(post =>
+          post.tags.includes(mainTag) && post.tags.includes(subTag)
+        );
+
+        if (hasPosts || keywords.some(kw => tags.includes(kw))) {
+          html += `<div class="tag-subgroup">`;
+          html += `<span class="tag-subgroup-title">${subTag}</span>`;
+
+          // 添加子分类标签
+          html += `<span class="tag tag-sub ${this.currentTag === subTag ? 'active' : ''}" data-tag="${subTag}">${subTag}</span>`;
+
+          // 添加关键词标签
+          for (const kw of keywords) {
+            if (tags.includes(kw)) {
+              html += `<span class="tag tag-keyword ${this.currentTag === kw ? 'active' : ''}" data-tag="${kw}">${kw}</span>`;
+            }
+          }
+
+          html += `</div>`;
+        }
+      }
+
+      html += `</div>`;
     }
 
     tagCloud.innerHTML = html;
