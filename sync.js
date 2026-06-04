@@ -144,6 +144,8 @@ function extractTagsFromFilename(fileName) {
     '晶振': '晶振',
     '时钟': '时钟',
     'clock': '时钟',
+    '通用配置': '通用配置',
+    '通用': '通用配置',
   };
 
   for (const [keyword, tag] of Object.entries(keywords)) {

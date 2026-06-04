@@ -47,7 +47,7 @@ const Blog = {
     // 定义层级结构
     const hierarchy = {
       'STM32': {
-        '基础': ['GPIO', 'I2C', 'SPI', '串口', '定时器', 'PWM', 'ADC', 'DMA', '中断', '烧录', '晶振', '时钟'],
+        '基础': ['GPIO', 'I2C', 'SPI', '串口', '定时器', 'PWM', 'ADC', 'DMA', '中断', '烧录', '晶振', '时钟', '通用配置'],
         '模块': ['MPU', '滤波', '蓝牙通信'],
         'Freertos': ['FreeRTOS', 'freertos配置']
       },
