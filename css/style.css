@@ -656,6 +656,25 @@ a:hover {
   font-size: 0.8rem;
 }
 
+/* 图片样式 */
+.post-content img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: var(--spacing-lg) auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-card);
+  background: white;
+  padding: 4px;
+}
+
+.post-content img:hover {
+  box-shadow: var(--shadow-soft);
+  transform: scale(1.02);
+  transition: var(--transition-normal);
+}
+
 .post-content h1 { font-size: 2rem; }
 .post-content h2 { font-size: 1.6rem; }
 .post-content h3 { font-size: 1.3rem; }
