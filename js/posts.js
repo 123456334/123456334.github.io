@@ -19,8 +19,7 @@ const POSTS = [
     "tags": [
       "STM32",
       "模块",
-      "蓝牙通信",
-      "蓝牙"
+      "蓝牙通信"
     ],
     "summary": "通过蓝牙进行通信，有主从机设置。",
     "content": "通过蓝牙进行通信，有主从机设置。"
@@ -32,8 +31,7 @@ const POSTS = [
     "tags": [
       "STM32",
       "模块",
-      "蓝牙通信",
-      "蓝牙"
+      "蓝牙通信"
     ],
     "summary": "直接引用，注意串口引脚是否对应，然后通信和打印的串口引脚不能是同一个，得分开,还需要注意蓝牙模块的波特率，在这里只写了蓝牙的接收，并没有写发送.",
     "content": "直接引用，注意串口引脚是否对应，然后通信和打印的串口引脚不能是同一个，得分开,还需要注意蓝牙模块的**波特率**，在这里只写了蓝牙的接收，并没有写发送.\n```\n#include \"serial.h\"\n\n/* 手动实现 strlen */\nstatic uint16_t my_strlen(const char *s)\n{\n    uint16_t len = 0;\n    while (*s++) len++;\n    return len;\n}\n\n/* ==========================================================**\n *                      私有变量\n * **========================================================** */\nstatic Serial_Handle serial;\nstatic UART_HandleTypeDef *huart_bt;\n\n/* **========================================================**\n *                      公共接口\n * **========================================================== */\n\nvoid Serial_Init(void)\n{\n    /* 清空结构体 */\n    for (uint16_t i = 0; i < sizeof(serial); i++) {\n        ((uint8_t *)&serial)[i] = 0;\n    }\n\n    /* 指向 CubeMX 的 huart2 */\n    extern UART_HandleTypeDef huart2;\n    huart_bt = &huart2;\n\n    /* 使能 IDLE 中断 */\n    __HAL_UART_ENABLE_IT(huart_bt, UART_IT_IDLE);\n\n    /* 启动 DMA 环形接收 */\n    HAL_UART_Receive_DMA(huart_bt, serial.buf, BT_RX_BUF_SIZE);\n}\n\nbool Serial_HasData(void)\n{\n    return serial.complete;\n}\n\nuint16_t Serial_ReadData(uint8_t *buf, uint16_t max_len)\n{\n    uint16_t len = serial.rx_len;\n    if (len > max_len) len = max_len;\n\n    for (uint16_t i = 0; i < len; i++) {\n        buf[i] = serial.buf[i];\n    }\n\n    /* 重置标志，准备下一帧 */\n    serial.rx_len = 0;\n    serial.complete = false;\n\n    return len;\n}\n\nvoid Serial_Send(const uint8_t *data, uint16_t len)\n{\n    HAL_UART_Transmit(huart_bt, (uint8_t *)data, len, 100);\n}\n\nvoid Serial_SendString(const char *str)\n{\n    Serial_Send((const uint8_t *)str, my_strlen(str));\n}\n\n/* ==========================================================**\n *                      中断回调\n * **========================================================== */\n\n/* USART2 中断处理（需要在 stm32f1xx_it.c 中调用） */\nvoid Serial_IRQHandler(void)\n{\n    /* 检查 IDLE 中断 */\n    if (__HAL_UART_GET_FLAG(huart_bt, UART_FLAG_IDLE)) {\n        /* 清除 IDLE 标志 */\n        __HAL_UART_CLEAR_IDLEFLAG(huart_bt);\n\n        /* 暂停 DMA，计算本次接收长度 */\n        HAL_UART_DMAStop(huart_bt);\n\n        /* 计算接收字节数：总缓冲 - DMA 剩余计数 */\n        serial.rx_len = BT_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(huart_bt->hdmarx);\n\n        /* 标记接收完成 */\n        if (serial.rx_len > 0) {\n            serial.complete = true;\n        }\n\n        /* 重新启动 DMA 接收 */\n        HAL_UART_Receive_DMA(huart_bt, serial.buf, BT_RX_BUF_SIZE);\n    }\n\n    /* 处理其他 UART 中断 */\n    HAL_UART_IRQHandler(huart_bt);\n}\n\n/* HAL DMA 半满/全满回调（空实现，不处理，靠 IDLE 中断） */\nvoid HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart)\n{\n    (void)huart;\n}\n\nvoid HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)\n{\n    /* DMA 环形模式不会触发全满回调，IDLE 中断统一处理 */\n    (void)huart;\n}\n\n```"
@@ -45,8 +43,7 @@ const POSTS = [
     "tags": [
       "STM32",
       "模块",
-      "蓝牙通信",
-      "蓝牙"
+      "蓝牙通信"
     ],
     "summary": "直接引用，注意串口引脚是否对应，然后通信和打印的串口引脚不能是同一个，得分开，还需要注意蓝牙模块的波特率",
     "content": "直接引用，注意串口引脚是否对应，然后通信和打印的串口引脚不能是同一个，得分开，还需要注意蓝牙模块的**波特率**\n```\n#ifndef __SERIAL_H__\n#define __SERIAL_H__\n\n#include \"main.h\"\n#include <stdint.h>\n#include <stdbool.h>\n\n/* ===========================================================**\n *                      配置\n * **=========================================================** */\n#define BT_UART             USART2\n#define BT_RX_BUF_SIZE      128\n\n/* **=========================================================**\n *                      类型定义\n * **=========================================================** */\ntypedef struct {\n    uint8_t  buf[BT_RX_BUF_SIZE];   /* DMA 环形接收缓冲区 */\n    volatile uint16_t rx_len;        /* 本次帧接收长度 */\n    volatile bool     complete;      /* 帧接收完成标志（IDLE 中断置位） */\n} Serial_Handle;\n\n/* **=========================================================**\n *                      函数声明\n * **=========================================================== */\n\n/* 初始化蓝牙串口（启动 DMA + IDLE 接收） */\nvoid Serial_Init(void);\n\n/* 检查是否收到完整一帧数据 */\nbool Serial_HasData(void);\n\n/* 读取接收到的帧数据，返回实际长度 */\nuint16_t Serial_ReadData(uint8_t *buf, uint16_t max_len);\n\n/* 发送数据 */\nvoid Serial_Send(const uint8_t *data, uint16_t len);\nvoid Serial_SendString(const char *str);\n\n#endif\n```"
@@ -58,8 +55,7 @@ const POSTS = [
     "tags": [
       "STM32",
       "模块",
-      "蓝牙通信",
-      "蓝牙"
+      "蓝牙通信"
     ],
     "summary": "1.该模块只能作为从机接收端，不能用来进行发送信息。 2.相关指令",
     "content": "1.该模块只能作为从机接收端，不能用来进行发送信息。\n2.相关指令\n![BT37蓝牙指令表.jpg](assets/BT37蓝牙指令表.jpg)"

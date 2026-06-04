@@ -48,9 +48,9 @@ const Blog = {
     const hierarchy = {
       'STM32': {
         '基础': ['GPIO', 'I2C', 'SPI', '串口', '定时器', 'PWM', 'ADC', 'DMA', '中断', '烧录', '晶振', '时钟'],
-        '模块': ['MPU', 'mpu5060', '滤波', '蓝牙', '蓝牙通信'],
+        '模块': ['MPU', '滤波', '蓝牙通信'],
         '图片介绍': [],
-        'Freertos': ['FreeRTOS', 'RTOS', 'freertos配置']
+        'Freertos': ['FreeRTOS', 'freertos配置']
       },
       'ESP32': {
         '模块': ['filter', 'mpu6000']

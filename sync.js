@@ -107,12 +107,12 @@ function extractTagsFromPath(filePath, vaultPath) {
   return tags;
 }
 
-// 从文件名提取额外标签
+// 从文件名提取额外标签（避免重复）
 function extractTagsFromFilename(fileName) {
   const tags = [];
   const name = fileName.toLowerCase();
 
-  // 常见关键词映射
+  // 常见关键词映射（优先级从高到低）
   const keywords = {
     'gpio': 'GPIO',
     'i2c': 'I2C',
@@ -128,8 +128,9 @@ function extractTagsFromFilename(fileName) {
     'dma': 'DMA',
     '中断': '中断',
     'interrupt': '中断',
-    '蓝牙': '蓝牙',
-    'bluetooth': '蓝牙',
+    'bluetooth': '蓝牙通信',
+    '蓝牙通信': '蓝牙通信',
+    '蓝牙': '蓝牙通信',  // 统一用"蓝牙通信"
     'wifi': 'WiFi',
     'mpu': 'MPU',
     '陀螺仪': '传感器',
