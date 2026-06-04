@@ -59,12 +59,17 @@ function copyImages(vaultPath) {
 }
 
 // 清理文件夹名称，生成可读标签
-function cleanFolderName(name) {
+function cleanFolderName(name, isRoot) {
+  // 如果是根目录（仓库名），直接返回清理后的名称
+  if (isRoot) {
+    return name.replace(/^blog[_\-]?/i, '');
+  }
+
   return name
     .replace(/^(stm32|esp32|硬件)[_\-]?/i, '')  // 移除前缀
     .replace(/图片介绍$/, '')                      // 移除"图片介绍"
     .replace(/配置$/, '配置')                      // 保留"配置"
-    .trim() || name;
+    .trim() || null;
 }
 
 // 从文件路径提取层级标签
@@ -78,15 +83,20 @@ function extractTagsFromPath(filePath, vaultPath) {
 
   const tags = [];
 
-  for (const part of parts) {
-    // 跳过 .obsidian、图片介绍、根目录文件夹
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    // 跳过 .obsidian、图片介绍
     if (part === '.obsidian' || part === '图片介绍') continue;
     if (part.endsWith('.md')) continue; // 跳过文件名
 
     // 清理文件夹名称
-    const cleanName = cleanFolderName(part);
-    if (cleanName && !tags.includes(cleanName)) {
-      tags.push(cleanName);
+    const cleanName = cleanFolderName(part, i === 0);
+    if (cleanName) {
+      // 去重（忽略大小写）
+      const lowerTags = tags.map(t => t.toLowerCase());
+      if (!lowerTags.includes(cleanName.toLowerCase())) {
+        tags.push(cleanName);
+      }
     }
   }
 
@@ -127,10 +137,18 @@ function parseMdFile(filePath, vaultTag, imageMap, vaultPath) {
 
     // 从文件夹路径提取层级标签
     const folderTags = extractTagsFromPath(filePath, vaultPath);
-    const tags = [vaultTag, ...folderTags];
 
-    // 去重
-    const uniqueTags = [...new Set(tags)];
+    // 合并标签，避免重复（忽略大小写）
+    const tags = [];
+    const allTags = [vaultTag, ...folderTags];
+    for (const tag of allTags) {
+      const lowerTags = tags.map(t => t.toLowerCase());
+      if (!lowerTags.includes(tag.toLowerCase())) {
+        tags.push(tag);
+      }
+    }
+
+    const uniqueTags = tags;
 
     // 生成摘要：取前 150 个字符
     const plainText = content
