@@ -65,9 +65,13 @@ function cleanFolderName(name, isRoot) {
     return name.replace(/^blog[_\-]?/i, '');
   }
 
+  // 保留"图片介绍"作为分类
+  if (name.includes('图片介绍')) {
+    return '图片介绍';
+  }
+
   return name
     .replace(/^(stm32|esp32|硬件)[_\-]?/i, '')  // 移除前缀
-    .replace(/图片介绍$/, '')                      // 移除"图片介绍"
     .replace(/配置$/, '配置')                      // 保留"配置"
     .trim() || null;
 }

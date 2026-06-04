@@ -49,6 +49,7 @@ const Blog = {
       'STM32': {
         '基础': ['GPIO', 'I2C', 'SPI', '串口', '定时器', 'PWM', 'ADC', 'DMA', '中断', '烧录', '晶振', '时钟'],
         '模块': ['MPU', 'mpu5060', '滤波', '蓝牙', '蓝牙通信'],
+        '图片介绍': [],
         'Freertos': ['FreeRTOS', 'RTOS', 'freertos配置']
       },
       'ESP32': {
@@ -75,22 +76,21 @@ const Blog = {
           post.tags.includes(mainTag) && post.tags.includes(subTag)
         );
 
-        if (hasPosts || keywords.some(kw => tags.includes(kw))) {
-          html += `<div class="tag-subgroup">`;
-          html += `<span class="tag-subgroup-title">${subTag}</span>`;
+        // 始终显示子分类
+        html += `<div class="tag-subgroup">`;
+        html += `<span class="tag-subgroup-title">${subTag}</span>`;
 
-          // 添加子分类标签
-          html += `<span class="tag tag-sub ${this.currentTag === subTag ? 'active' : ''}" data-tag="${subTag}">${subTag}</span>`;
+        // 添加子分类标签
+        html += `<span class="tag tag-sub ${this.currentTag === subTag ? 'active' : ''}" data-tag="${subTag}">${subTag}</span>`;
 
-          // 添加关键词标签
-          for (const kw of keywords) {
-            if (tags.includes(kw)) {
-              html += `<span class="tag tag-keyword ${this.currentTag === kw ? 'active' : ''}" data-tag="${kw}">${kw}</span>`;
-            }
+        // 添加关键词标签
+        for (const kw of keywords) {
+          if (tags.includes(kw)) {
+            html += `<span class="tag tag-keyword ${this.currentTag === kw ? 'active' : ''}" data-tag="${kw}">${kw}</span>`;
           }
-
-          html += `</div>`;
         }
+
+        html += `</div>`;
       }
 
       html += `</div>`;
