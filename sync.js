@@ -1,4 +1,4 @@
-// Obsidian 笔记同步脚本
+// Obsidian 笔记同步脚本 v2（支持图片）
 const fs = require('fs');
 const path = require('path');
 
@@ -9,8 +9,16 @@ const VAULTS = [
   { path: 'D:/blog/blog/blog_硬件', tag: '硬件' },
 ];
 
-// 读取目录下所有 .md 文件
-function getAllMdFiles(dir) {
+const BLOG_DIR = 'D:/blog/blog_wbsite';
+const ASSETS_DIR = path.join(BLOG_DIR, 'assets');
+
+// 确保 assets 目录存在
+if (!fs.existsSync(ASSETS_DIR)) {
+  fs.mkdirSync(ASSETS_DIR, { recursive: true });
+}
+
+// 读取目录下所有文件
+function getAllFiles(dir, extensions) {
   let results = [];
   try {
     const items = fs.readdirSync(dir);
@@ -18,8 +26,8 @@ function getAllMdFiles(dir) {
       const fullPath = path.join(dir, item);
       const stat = fs.statSync(fullPath);
       if (stat.isDirectory()) {
-        results = results.concat(getAllMdFiles(fullPath));
-      } else if (item.endsWith('.md')) {
+        results = results.concat(getAllFiles(fullPath, extensions));
+      } else if (extensions.some(ext => item.toLowerCase().endsWith(ext))) {
         results.push(fullPath);
       }
     }
@@ -29,24 +37,61 @@ function getAllMdFiles(dir) {
   return results;
 }
 
+// 复制图片到 assets 目录
+function copyImages(vaultPath) {
+  const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'];
+  const images = getAllFiles(vaultPath, imageExtensions);
+  const imageMap = {};
+
+  for (const imgPath of images) {
+    const fileName = path.basename(imgPath);
+    const destPath = path.join(ASSETS_DIR, fileName);
+
+    try {
+      fs.copyFileSync(imgPath, destPath);
+      imageMap[fileName] = `assets/${fileName}`;
+    } catch (e) {
+      console.error(`复制图片失败: ${fileName}`, e.message);
+    }
+  }
+
+  return imageMap;
+}
+
 // 解析 Markdown 文件
-function parseMdFile(filePath, vaultTag) {
+function parseMdFile(filePath, vaultTag, imageMap) {
   try {
-    const content = fs.readFileSync(filePath, 'utf-8');
+    let content = fs.readFileSync(filePath, 'utf-8');
     const fileName = path.basename(filePath, '.md');
+
+    // 转换 Obsidian 图片语法: ![[image.png]] -> ![image](assets/image.png)
+    content = content.replace(/!\[\[([^\]]+\.\w+)\]\]/g, (match, imageName) => {
+      const cleanName = imageName.trim();
+      if (imageMap[cleanName]) {
+        return `![${cleanName}](${imageMap[cleanName]})`;
+      }
+      // 如果图片没找到，保留原样但添加提示
+      return `![${cleanName}](assets/${cleanName})`;
+    });
+
+    // 转换 Obsidian 内部链接: [[link]] -> `link`
+    content = content.replace(/\[\[([^\]]+)\]\]/g, '`$1`');
+
+    // 转换 Obsidian 高亮: ==text== -> **text**
+    content = content.replace(/==([^=]+)==/g, '**$1**');
 
     // 提取标题：取第一个 # 标题，或用文件名
     const titleMatch = content.match(/^#\s+(.+)$/m);
     const title = titleMatch ? titleMatch[1] : fileName.replace(/_/g, ' ');
 
-    // 生成 ID：基于相对路径
+    // 生成 ID：基于文件名
     const id = fileName
       .toLowerCase()
       .replace(/[^a-z0-9一-龥]/g, '-')
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '');
 
-    // 提取标签：从目录结构和内容
+    // 提取标签
     const tags = [vaultTag];
     const relativePath = filePath.replace(/\\/g, '/');
     const pathParts = relativePath.split('/');
@@ -58,20 +103,13 @@ function parseMdFile(filePath, vaultTag) {
       if (part.includes('配置') || part.includes('config')) tags.push('配置');
       if (part.includes('FreeRTOS') || part.includes('freertos')) tags.push('FreeRTOS');
       if (part.includes('GPIO')) tags.push('GPIO');
-      if (part.includes('I2C')) tags.push('I2C');
+      if (part.includes('I2C') || part.includes('i2c')) tags.push('I2C');
       if (part.includes('SPI')) tags.push('SPI');
-      if (part.includes('UART')) tags.push('UART');
-    }
-
-    // 从内容提取标签（Obsidian 标签格式 #tag）
-    const tagMatches = content.match(/#[a-zA-Z一-龥][a-zA-Z0-9一-龥]*/g);
-    if (tagMatches) {
-      tagMatches.forEach(t => {
-        const tag = t.substring(1);
-        if (!tags.includes(tag) && tag.length < 10) {
-          tags.push(tag);
-        }
-      });
+      if (part.includes('UART') || part.includes('usart')) tags.push('UART');
+      if (part.includes('tim') || part.includes('TIM')) tags.push('定时器');
+      if (part.includes('蓝牙') || part.includes('bluetooth')) tags.push('蓝牙');
+      if (part.includes('滤波') || part.includes('filter')) tags.push('滤波');
+      if (part.includes('mpu') || part.includes('MPU')) tags.push('传感器');
     }
 
     // 去重
@@ -79,17 +117,18 @@ function parseMdFile(filePath, vaultTag) {
 
     // 生成摘要：取前 150 个字符
     const plainText = content
-      .replace(/^#+\s+.+$/gm, '')  // 移除标题
-      .replace(/```[\s\S]*?```/g, '')  // 移除代码块
-      .replace(/`[^`]+`/g, '')  // 移除行内代码
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')  // 移除链接格式
-      .replace(/[#*_~\[\]()]/g, '')  // 移除其他标记
-      .replace(/\n+/g, ' ')  // 换行变空格
+      .replace(/^#+\s+.+$/gm, '')
+      .replace(/```[\s\S]*?```/g, '')
+      .replace(/`[^`]+`/g, '')
+      .replace(/!\[([^\]]*)\]\([^)]+\)/g, '')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .replace(/[#*_~\[\]()]/g, '')
+      .replace(/\n+/g, ' ')
       .trim();
 
     const summary = plainText.substring(0, 150) + (plainText.length > 150 ? '...' : '');
 
-    // 获取文件修改时间作为日期
+    // 获取文件修改时间
     const stat = fs.statSync(filePath);
     const date = stat.mtime.toISOString().split('T')[0];
 
@@ -111,26 +150,45 @@ function parseMdFile(filePath, vaultTag) {
 function main() {
   console.log('🔄 开始同步 Obsidian 笔记...\n');
 
+  // 清空 assets 目录
+  if (fs.existsSync(ASSETS_DIR)) {
+    const files = fs.readdirSync(ASSETS_DIR);
+    for (const file of files) {
+      fs.unlinkSync(path.join(ASSETS_DIR, file));
+    }
+    console.log('🗑️  已清空 assets 目录\n');
+  }
+
   const allPosts = [];
+  let totalImages = 0;
 
   for (const vault of VAULTS) {
     console.log(`📂 扫描仓库: ${vault.path}`);
-    const files = getAllMdFiles(vault.path);
-    console.log(`   找到 ${files.length} 个 .md 文件`);
+
+    // 复制图片
+    const imageMap = copyImages(vault.path);
+    const imageCount = Object.keys(imageMap).length;
+    totalImages += imageCount;
+    console.log(`   📷 复制了 ${imageCount} 张图片`);
+
+    // 扫描 Markdown 文件
+    const files = getAllFiles(vault.path, ['.md']);
+    console.log(`   📝 找到 ${files.length} 个 .md 文件`);
 
     for (const file of files) {
-      const post = parseMdFile(file, vault.tag);
+      const post = parseMdFile(file, vault.tag, imageMap);
       if (post) {
         allPosts.push(post);
         console.log(`   ✅ ${post.title}`);
       }
     }
+    console.log('');
   }
 
-  // 按日期排序（最新的在前）
+  // 按日期排序
   allPosts.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  // 生成 posts.js 内容
+  // 生成 posts.js
   const postsJs = `// 博客文章数据（由 sync.js 自动生成）
 const POSTS = ${JSON.stringify(allPosts, null, 2)};
 
@@ -164,11 +222,12 @@ function getPostById(id) {
 }
 `;
 
-  // 写入文件
-  fs.writeFileSync('D:/blog/blog_wbsite/js/posts.js', postsJs, 'utf-8');
+  fs.writeFileSync(path.join(BLOG_DIR, 'js/posts.js'), postsJs, 'utf-8');
 
-  console.log(`\n✨ 同步完成！共 ${allPosts.length} 篇文章`);
-  console.log('📁 已更新: D:/blog/blog_wbsite/js/posts.js');
+  console.log('✨ 同步完成！');
+  console.log(`   📝 文章: ${allPosts.length} 篇`);
+  console.log(`   📷 图片: ${totalImages} 张`);
+  console.log(`   📁 已更新: js/posts.js`);
 }
 
 main();
