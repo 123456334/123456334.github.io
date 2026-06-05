@@ -238,6 +238,68 @@ function parseMdFile(filePath, vaultTag, imageMap, vaultPath) {
   }
 }
 
+// 从文章标签自动生成层级结构
+function generateHierarchy(posts) {
+  const hierarchy = {};
+
+  for (const post of posts) {
+    const tags = post.tags;
+    if (tags.length < 2) continue;
+
+    const mainTag = tags[0]; // 第一个标签是主分类（如 STM32、ESP32、硬件）
+    const subTag = tags[1];  // 第二个标签是子分类（如 基础、模块）
+
+    if (!hierarchy[mainTag]) {
+      hierarchy[mainTag] = {};
+    }
+
+    if (!hierarchy[mainTag][subTag]) {
+      hierarchy[mainTag][subTag] = [];
+    }
+
+    // 添加剩余的标签作为关键词
+    for (let i = 2; i < tags.length; i++) {
+      const keyword = tags[i];
+      if (!hierarchy[mainTag][subTag].includes(keyword)) {
+        hierarchy[mainTag][subTag].push(keyword);
+      }
+    }
+  }
+
+  return hierarchy;
+}
+
+// 更新 main.js 中的层级结构
+function updateMainJs(hierarchy) {
+  const mainJsPath = path.join(BLOG_DIR, 'js/main.js');
+
+  try {
+    let content = fs.readFileSync(mainJsPath, 'utf-8');
+
+    // 生成新的层级结构代码
+    const hierarchyCode = JSON.stringify(hierarchy, null, 8)
+      .replace(/"/g, "'")
+      .replace(/^( +)/gm, '        $1');
+
+    // 替换 hierarchy 部分
+    const hierarchyRegex = /const hierarchy = \{[\s\S]*?\};/;
+    const newHierarchy = `const hierarchy = ${hierarchyCode};`;
+
+    if (hierarchyRegex.test(content)) {
+      content = content.replace(hierarchyRegex, newHierarchy);
+    } else {
+      console.log('⚠️  未找到 hierarchy 定义，跳过更新 main.js');
+      return false;
+    }
+
+    fs.writeFileSync(mainJsPath, content, 'utf-8');
+    return true;
+  } catch (e) {
+    console.error('更新 main.js 失败:', e.message);
+    return false;
+  }
+}
+
 // 主函数
 function main() {
   console.log('🔄 开始同步 Obsidian 笔记...\n');
@@ -316,10 +378,21 @@ function getPostById(id) {
 
   fs.writeFileSync(path.join(BLOG_DIR, 'js/posts.js'), postsJs, 'utf-8');
 
+  // 自动生成并更新层级结构
+  console.log('🏷️  更新标签层级结构...');
+  const hierarchy = generateHierarchy(allPosts);
+  const updated = updateMainJs(hierarchy);
+  if (updated) {
+    console.log('   ✅ 已更新 main.js 中的标签层级\n');
+  }
+
   console.log('✨ 同步完成！');
   console.log(`   📝 文章: ${allPosts.length} 篇`);
   console.log(`   📷 图片: ${totalImages} 张`);
   console.log(`   📁 已更新: js/posts.js`);
+  if (updated) {
+    console.log(`   📁 已更新: js/main.js（标签层级）`);
+  }
 }
 
 main();
