@@ -1,9 +1,9 @@
 @echo off
 chcp 65001 >nul
-title CodeSpace 博客同步工具
+title ning的博客同步工具
 
 echo ========================================
-echo    CodeSpace 博客同步工具
+echo    ning的博客同步工具
 echo ========================================
 echo.
 
@@ -24,11 +24,15 @@ git commit -m "sync: 更新笔记 %date% %time:~0,5%"
 
 echo.
 echo [3/3] 推送到 GitHub...
-git push
+git push origin main
 if errorlevel 1 (
-    echo ❌ 推送失败！请检查网络连接
-    pause
-    exit /b 1
+    echo ❌ 推送失败！尝试强制推送...
+    git push origin main --force
+    if errorlevel 1 (
+        echo ❌ 推送失败！请检查网络连接或重新配置 Git 认证
+        pause
+        exit /b 1
+    )
 )
 
 echo.
