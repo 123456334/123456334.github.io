@@ -83,43 +83,44 @@ const Blog = {
     // 生成 HTML
     let html = `
       <div class="tag-cloud-title">// 标签筛选</div>
-      <span class="tag ${!this.currentTag ? 'active' : ''}" data-tag="">全部文章</span>
+      <div class="tag-toolbar">
+        <span class="tag tag-all ${!this.currentTag ? 'active' : ''}" data-tag="">全部文章</span>
+        <span class="tag-toolbar-info">共 ${POSTS.length} 篇</span>
+      </div>
+      <div class="tag-categories">
     `;
 
     for (const [mainTag, subGroups] of Object.entries(hierarchy)) {
-      html += `<div class="tag-group">`;
-      html += `<div class="tag-group-title">${mainTag}</div>`;
+      // 跳过全空的分类
+      const hasAnyTag = Object.values(subGroups).some(keywords =>
+        keywords.some(kw => tags.includes(kw))
+      );
+      if (!hasAnyTag) continue;
+
+      html += `<div class="tag-category">`;
+      html += `<div class="tag-category-header"><span class="bracket">【</span>${mainTag}<span class="bracket">】</span></div>`;
+      html += `<div class="tag-category-body">`;
 
       for (const [subTag, keywords] of Object.entries(subGroups)) {
-        // 使用组合标签: "父分类/子分类"
-        const combinedTag = `${mainTag}/${subTag}`;
+        const visibleKeywords = keywords.filter(kw => tags.includes(kw));
+        if (visibleKeywords.length === 0) continue;
 
-        // 检查这个子分类是否有文章
-        const hasPosts = POSTS.some(post =>
-          post.tags.includes(mainTag) && post.tags.includes(subTag)
-        );
-
-        // 始终显示子分类
         html += `<div class="tag-subgroup">`;
-        html += `<span class="tag-subgroup-title">${subTag}</span>`;
-
-        // 添加子分类标签（使用组合标签）
-        html += `<span class="tag tag-sub ${this.currentTag === combinedTag ? 'active' : ''}" data-tag="${combinedTag}" data-parent="${mainTag}">${subTag}</span>`;
-
-        // 添加关键词标签（使用组合标签）
-        for (const kw of keywords) {
-          if (tags.includes(kw)) {
-            const kwCombinedTag = `${mainTag}/${kw}`;
-            html += `<span class="tag tag-keyword ${this.currentTag === kwCombinedTag ? 'active' : ''}" data-tag="${kwCombinedTag}" data-parent="${mainTag}">${kw}</span>`;
-          }
+        html += `<span class="tag-subgroup-label">${subTag}</span>`;
+        html += `<div class="tag-subgroup-tags">`;
+        for (const kw of visibleKeywords) {
+          const kwCombinedTag = `${mainTag}/${kw}`;
+          html += `<span class="tag tag-keyword ${this.currentTag === kwCombinedTag ? 'active' : ''}" data-tag="${kwCombinedTag}" data-parent="${mainTag}">${kw}</span>`;
         }
-
+        html += `</div>`;
         html += `</div>`;
       }
 
       html += `</div>`;
+      html += `</div>`;
     }
 
+    html += `</div>`;
     tagCloud.innerHTML = html;
 
     // 绑定标签点击事件
