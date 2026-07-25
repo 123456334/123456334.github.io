@@ -60,7 +60,6 @@ const Blog = {
                 },
                 'ESP32': {
                         '模块': [
-                                'filter',
                                 '滤波',
                                 'mpu6000'
                         ]

@@ -266,7 +266,6 @@ const POSTS = [
     "tags": [
       "ESP32",
       "模块",
-      "filter",
       "滤波"
     ],
     "summary": "",
@@ -279,7 +278,6 @@ const POSTS = [
     "tags": [
       "ESP32",
       "模块",
-      "filter",
       "滤波"
     ],
     "summary": "",
@@ -422,6 +420,7 @@ const POSTS = [
     "content": "1.stm32cubmx通用所有项目都必须进行配置选项\n2.下载烧录配置\n![下载烧录.png](assets/下载烧录.png) 3. 晶振配置：一般使用外部晶振（频率更高效果更好）\n![高速时钟.png](assets/高速时钟.png)4.时钟配置：板子上晶振原件显示的频率是多少（不同开发板不同芯片的晶振频率对应也不一样），一般直接启动到最大频率,2个例子。\n![时钟树1.png](assets/时钟树1.png)\n5.选择编译环境，生成代码，转到vscode\n![编译环境1.png](assets/编译环境1.png)![编译环境2.png](assets/编译环境2.png)\n6.附件：stm32f103c8t6引脚定义图\n![STM32F103C8T6引脚定义图.png](assets/STM32F103C8T6引脚定义图.png)\n"
   }
 ];
+
 
 
 
