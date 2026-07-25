@@ -91,28 +91,37 @@ const Blog = {
     `;
 
     for (const [mainTag, subGroups] of Object.entries(hierarchy)) {
-      // 跳过全空的分类
-      const hasAnyTag = Object.values(subGroups).some(keywords =>
-        keywords.some(kw => tags.includes(kw))
-      );
-      if (!hasAnyTag) continue;
-
       html += `<div class="tag-category">`;
       html += `<div class="tag-category-header"><span class="bracket">【</span>${mainTag}<span class="bracket">】</span></div>`;
       html += `<div class="tag-category-body">`;
 
       for (const [subTag, keywords] of Object.entries(subGroups)) {
+        const combinedTag = `${mainTag}/${subTag}`;
         const visibleKeywords = keywords.filter(kw => tags.includes(kw));
-        if (visibleKeywords.length === 0) continue;
+        const subgroupHasPosts = POSTS.some(post =>
+          post.tags.includes(mainTag) && post.tags.includes(subTag)
+        );
+
+        // 跳过既没有文章也没有关键词的分组
+        if (!subgroupHasPosts && visibleKeywords.length === 0) continue;
 
         html += `<div class="tag-subgroup">`;
-        html += `<span class="tag-subgroup-label">${subTag}</span>`;
-        html += `<div class="tag-subgroup-tags">`;
-        for (const kw of visibleKeywords) {
-          const kwCombinedTag = `${mainTag}/${kw}`;
-          html += `<span class="tag tag-keyword ${this.currentTag === kwCombinedTag ? 'active' : ''}" data-tag="${kwCombinedTag}" data-parent="${mainTag}">${kw}</span>`;
+
+        // 子分组标签（可点击筛选该子分类下所有文章）
+        if (subgroupHasPosts) {
+          html += `<span class="tag tag-sub ${this.currentTag === combinedTag ? 'active' : ''}" data-tag="${combinedTag}" data-parent="${mainTag}">${subTag}</span>`;
         }
-        html += `</div>`;
+
+        // 关键词标签
+        if (visibleKeywords.length > 0) {
+          html += `<div class="tag-subgroup-tags">`;
+          for (const kw of visibleKeywords) {
+            const kwCombinedTag = `${mainTag}/${kw}`;
+            html += `<span class="tag tag-keyword ${this.currentTag === kwCombinedTag ? 'active' : ''}" data-tag="${kwCombinedTag}" data-parent="${mainTag}">${kw}</span>`;
+          }
+          html += `</div>`;
+        }
+
         html += `</div>`;
       }
 

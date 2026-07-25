@@ -384,21 +384,26 @@ a:hover {
   border-bottom: none;
 }
 
-.tag-subgroup-label {
-  font-size: 0.85rem;
-  color: var(--accent-teal);
-  font-weight: 500;
-  min-width: 70px;
-  padding-top: 5px;
-  font-family: var(--font-mono);
-  letter-spacing: 1px;
+/* 子分组标签（可点击筛选子分类） */
+.tag-sub {
+  background: rgba(200, 90, 90, 0.06);
+  border-color: rgba(200, 90, 90, 0.15);
+  color: var(--accent-red);
   flex-shrink: 0;
 }
 
-.tag-subgroup-label::before {
-  content: '└ ';
-  color: var(--accent-gold);
-  opacity: 0.5;
+.tag-sub::before {
+  content: '◆';
+  font-size: 0.6rem;
+  color: var(--accent-red);
+  opacity: 0.7;
+}
+
+.tag-sub:hover,
+.tag-sub.active {
+  background: rgba(200, 90, 90, 0.12);
+  border-color: var(--accent-red);
+  color: var(--accent-red);
 }
 
 .tag-subgroup-tags {
