@@ -7,7 +7,7 @@ const VAULTS = [
   { path: 'D:/blog/blog/blog_stm32', tag: 'STM32' },
   { path: 'D:/blog/blog/blog_esp32', tag: 'ESP32' },
   { path: 'D:/blog/blog/blog_硬件', tag: '硬件' },
-  { path: 'D:/blog/blog/blog_项目（上海梦孚）', tag: '基于步态相位检测和空间触觉的' },
+  { path: 'D:/blog/blog/blog_项目（上海梦孚）', tag: '基于步态相位检测与空间触觉同步干扰的智能长袜系统' },
 ];
 
 const BLOG_DIR = 'D:/blog/blog_wbsite';
