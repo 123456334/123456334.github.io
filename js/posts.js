@@ -49,19 +49,6 @@ const POSTS = [
     "content": "## 系统硬件方案\n\n### 系统概述\n面向步态康复训练的智能可穿戴设备，通过多传感器融合实现步态相位识别，并基于空间触觉同步干扰技术提供实时反馈。\n\n### 核心模块\n- **足底压力传感器阵列**：柔性薄膜电阻式，18点阵列扫描\n- **六轴姿态传感器（MPU6050）**：MEMS技术，I²C接口\n- **线性振动马达（ERM）**：PWM驱动，多通道独立控制\n- **主控芯片（ESP32-S3）**：双核处理器，集成BLE/Wi-Fi\n- **电源系统**：锂电池供电 + DCDC降压模块\n\n### 技术亮点\n- 多传感器数据融合实现精确步态相位识别\n- 空间触觉反馈：按解剖位置排列的马达阵列\n- 低功耗设计：ULP协处理器支持深度睡眠采样"
   },
   {
-    "id": "micropython-esp32开发板-无线wifi-蓝牙双核模块-micro接口",
-    "title": "MicroPython ESP32开发板 无线WIFI+蓝牙双核模块 MICRO接口",
-    "date": "2026-07-15",
-    "tags": [
-      "ESP32",
-      "板子类型",
-      "蓝牙通信",
-      "WiFi"
-    ],
-    "summary": "1.图片介绍 2.platform型号选择 \tEspressif ESP32 Dev Module",
-    "content": "1.图片介绍\n\n![67541b691f37a991abe22df5becc64fe.jpg](assets/67541b691f37a991abe22df5becc64fe.jpg)\n\n2.platform型号选择\n\tEspressif ESP32 Dev Module\n\n"
-  },
-  {
     "id": "配置",
     "title": "配置",
     "date": "2026-07-14",
@@ -435,6 +422,7 @@ const POSTS = [
     "content": "1.stm32cubmx通用所有项目都必须进行配置选项\n2.下载烧录配置\n![下载烧录.png](assets/下载烧录.png) 3. 晶振配置：一般使用外部晶振（频率更高效果更好）\n![高速时钟.png](assets/高速时钟.png)4.时钟配置：板子上晶振原件显示的频率是多少（不同开发板不同芯片的晶振频率对应也不一样），一般直接启动到最大频率,2个例子。\n![时钟树1.png](assets/时钟树1.png)\n5.选择编译环境，生成代码，转到vscode\n![编译环境1.png](assets/编译环境1.png)![编译环境2.png](assets/编译环境2.png)\n6.附件：stm32f103c8t6引脚定义图\n![STM32F103C8T6引脚定义图.png](assets/STM32F103C8T6引脚定义图.png)\n"
   }
 ];
+
 
 
 
