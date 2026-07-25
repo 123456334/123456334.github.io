@@ -86,7 +86,7 @@ const Blog = {
 
     // 生成 HTML
     let html = `
-      <div class="tag-cloud-title">// 标签筛选</div>
+      <div class="tag-cloud-title">🐾 标签筛选</div>
       <div class="tag-toolbar">
         <span class="tag tag-all ${!this.currentTag ? 'active' : ''}" data-tag="">全部文章</span>
         <span class="tag-toolbar-info">共 ${POSTS.length} 篇</span>
