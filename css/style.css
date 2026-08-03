@@ -346,6 +346,44 @@ a:hover {
   border-color: var(--border-accent);
 }
 
+/* 实习项目集特殊分类样式 */
+.tag-category-special {
+  background: linear-gradient(135deg, rgba(255, 240, 220, 0.5), rgba(255, 245, 230, 0.3));
+  border: 1.5px solid rgba(232, 130, 122, 0.3);
+  box-shadow: 0 2px 12px rgba(232, 130, 122, 0.06);
+}
+
+.tag-category-special:hover {
+  border-color: var(--accent-coral);
+  box-shadow: 0 4px 20px rgba(232, 130, 122, 0.12);
+}
+
+.tag-category-special .tag-category-header {
+  color: var(--accent-coral);
+}
+
+.tag-category-special .tag-special {
+  background: rgba(232, 130, 122, 0.08);
+  border-color: rgba(232, 130, 122, 0.25);
+  color: var(--accent-coral);
+  font-size: 0.85rem;
+  padding: 6px 16px;
+}
+
+.tag-category-special .tag-special::before {
+  content: '⭐';
+  font-size: 0.7rem;
+  color: var(--accent-coral);
+  opacity: 0.8;
+}
+
+.tag-category-special .tag-special:hover,
+.tag-category-special .tag-special.active {
+  background: rgba(232, 130, 122, 0.15);
+  border-color: var(--accent-coral);
+  color: var(--accent-coral);
+}
+
 .tag-category-header {
   font-size: 1rem;
   color: var(--accent-brown);

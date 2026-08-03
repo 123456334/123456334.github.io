@@ -95,6 +95,11 @@ const Blog = {
                 }
 };
 
+    // 实习项目集特殊分类
+    const projectMainTag = '基于步态相位检测与空间触觉同步干扰的智能长袜系统';
+    const projectPosts = POSTS.filter(p => p.tags.includes(projectMainTag));
+    const projectCombined = `实习项目集/${projectMainTag}`;
+
     // 生成 HTML
     let html = `
       <div class="tag-cloud-title">🐾 标签筛选</div>
@@ -104,6 +109,19 @@ const Blog = {
       </div>
       <div class="tag-categories">
     `;
+
+    // 实习项目集特殊分类
+    if (projectPosts.length > 0) {
+      html += `<div class="tag-category tag-category-special">`;
+      html += `<div class="tag-category-header"><span class="bracket">【</span>🎓 实习项目集<span class="bracket">】</span></div>`;
+      html += `<div class="tag-category-body">`;
+      html += `<div class="tag-subgroup">`;
+      html += `<span class="tag tag-sub tag-special ${this.currentTag === projectCombined ? 'active' : ''}" data-tag="${projectCombined}" data-parent="实习项目集">${projectMainTag}</span>`;
+      html += `<span class="tag-toolbar-info">${projectPosts.length} 篇</span>`;
+      html += `</div>`;
+      html += `</div>`;
+      html += `</div>`;
+    }
 
     for (const [mainTag, subGroups] of Object.entries(hierarchy)) {
       html += `<div class="tag-category">`;
