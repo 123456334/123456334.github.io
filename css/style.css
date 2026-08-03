@@ -384,6 +384,64 @@ a:hover {
   color: var(--accent-coral);
 }
 
+/* 嵌套层级样式 */
+.tag-subgroup-nested {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) 0;
+  border: none;
+}
+
+.tag-subgroup-children {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin-left: var(--spacing-md);
+  padding-left: var(--spacing-md);
+  border-left: 1px dashed rgba(184, 134, 94, 0.15);
+}
+
+.tag-subgroup-children .tag-subgroup {
+  border: none;
+}
+
+.tag-subgroup-children .tag-sub {
+  background: rgba(127, 176, 168, 0.08);
+  border-color: rgba(127, 176, 168, 0.2);
+  color: var(--accent-teal);
+}
+
+.tag-subgroup-children .tag-sub:hover,
+.tag-subgroup-children .tag-sub.active {
+  background: rgba(127, 176, 168, 0.18);
+  border-color: var(--accent-teal);
+  color: var(--accent-teal);
+}
+
+/* 项目卡片特殊样式 */
+.tag-category-special .tag-subgroup-nested > .tag-sub {
+  background: rgba(232, 130, 122, 0.1);
+  border-color: rgba(232, 130, 122, 0.3);
+  color: var(--accent-coral);
+  font-size: 0.85rem;
+  padding: 6px 16px;
+  align-self: flex-start;
+}
+
+.tag-category-special .tag-subgroup-nested > .tag-sub::before {
+  content: '⭐';
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
+.tag-category-special .tag-subgroup-nested > .tag-sub:hover,
+.tag-category-special .tag-subgroup-nested > .tag-sub.active {
+  background: rgba(232, 130, 122, 0.18);
+  border-color: var(--accent-coral);
+}
+
 .tag-category-header {
   font-size: 1rem;
   color: var(--accent-brown);

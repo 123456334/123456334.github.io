@@ -46,17 +46,21 @@ const Blog = {
 
     // 定义层级结构
     const hierarchy = {
-                '基于步态相位检测与空间触觉同步干扰的智能长袜系统': {
-                        '驱动': [
-                                '驱动马达'
-                        ],
-                        '传感': [
-                                'mpu6050',
-                                '足部压力传感器'
-                        ],
-                        '硬件': [
-                                '硬件选型'
-                        ]
+                '项目集': {
+                        '实习项目': {
+                                '基于步态相位检测与空间触觉同步干扰的智能长袜系统': {
+                                        '驱动': [
+                                                '驱动马达'
+                                        ],
+                                        '传感': [
+                                                'mpu6050',
+                                                '足部压力传感器'
+                                        ],
+                                        '硬件': [
+                                                '硬件选型'
+                                        ]
+                                }
+                        }
                 },
                 'ESP32': {
                         '模块': [
@@ -95,10 +99,9 @@ const Blog = {
                 }
 };
 
-    // 实习项目集特殊分类
+    // 实习项目集特殊分类统计
     const projectMainTag = '基于步态相位检测与空间触觉同步干扰的智能长袜系统';
     const projectPosts = POSTS.filter(p => p.tags.includes(projectMainTag));
-    const projectCombined = `实习项目集/${projectMainTag}`;
 
     // 生成 HTML
     let html = `
@@ -110,52 +113,69 @@ const Blog = {
       <div class="tag-categories">
     `;
 
-    // 实习项目集特殊分类
-    if (projectPosts.length > 0) {
-      html += `<div class="tag-category tag-category-special">`;
-      html += `<div class="tag-category-header"><span class="bracket">【</span>🎓 实习项目集<span class="bracket">】</span></div>`;
-      html += `<div class="tag-category-body">`;
-      html += `<div class="tag-subgroup">`;
-      html += `<span class="tag tag-sub tag-special ${this.currentTag === projectCombined ? 'active' : ''}" data-tag="${projectCombined}" data-parent="实习项目集">${projectMainTag}</span>`;
-      html += `<span class="tag-toolbar-info">${projectPosts.length} 篇</span>`;
-      html += `</div>`;
-      html += `</div>`;
-      html += `</div>`;
+    // 项目集特殊分类（项目集 → 实习项目 → 具体项目 → 子分组 → 关键词）
+    // 支持任意层级嵌套渲染
+    function renderHierarchyLevel(groupObj, parentPath, indentClass) {
+      let out = '';
+      for (const [tag, value] of Object.entries(groupObj)) {
+        const currentPath = parentPath ? `${parentPath}/${tag}` : tag;
+        const hasPosts = POSTS.some(post => post.tags.includes(tag));
+
+        // 如果 value 是数组，说明是叶子关键词列表
+        if (Array.isArray(value)) {
+          const visibleKeywords = value.filter(kw => tags.includes(kw));
+          if (visibleKeywords.length === 0 && !hasPosts) continue;
+
+          out += `<div class="tag-subgroup ${indentClass || ''}">`;
+          if (hasPosts) {
+            out += `<span class="tag tag-sub ${this.currentTag === currentPath ? 'active' : ''}" data-tag="${currentPath}" data-parent="${parentPath || ''}">${tag}</span>`;
+          }
+          if (visibleKeywords.length > 0) {
+            out += `<div class="tag-subgroup-tags">`;
+            for (const kw of visibleKeywords) {
+              const kwCombinedTag = `${currentPath}/${kw}`;
+              out += `<span class="tag tag-keyword ${this.currentTag === kwCombinedTag ? 'active' : ''}" data-tag="${kwCombinedTag}" data-parent="${parentPath || ''}">${kw}</span>`;
+            }
+            out += `</div>`;
+          }
+          out += `</div>`;
+        }
+        // 否则是嵌套对象，递归渲染（子标签 + 内层）
+        else {
+          out += `<div class="tag-subgroup tag-subgroup-nested ${indentClass || ''}">`;
+          if (hasPosts) {
+            out += `<span class="tag tag-sub ${this.currentTag === currentPath ? 'active' : ''}" data-tag="${currentPath}" data-parent="${parentPath || ''}">${tag}</span>`;
+          }
+          out += `<div class="tag-subgroup-children">`;
+          out += renderHierarchyLevel(value, currentPath, 'tag-nested-level');
+          out += `</div>`;
+          out += `</div>`;
+        }
+      }
+      return out;
     }
 
     for (const [mainTag, subGroups] of Object.entries(hierarchy)) {
-      html += `<div class="tag-category">`;
-      html += `<div class="tag-category-header"><span class="bracket">【</span>${mainTag}<span class="bracket">】</span></div>`;
+      const isProject = mainTag === '项目集';
+      const hasMainPosts = POSTS.some(post => post.tags.includes(mainTag));
+
+      html += `<div class="tag-category ${isProject ? 'tag-category-special' : ''}">`;
+      html += `<div class="tag-category-header"><span class="bracket">【</span>${isProject ? '🎓 ' : ''}${mainTag}<span class="bracket">】</span></div>`;
       html += `<div class="tag-category-body">`;
 
-      for (const [subTag, keywords] of Object.entries(subGroups)) {
-        const combinedTag = `${mainTag}/${subTag}`;
-        const visibleKeywords = keywords.filter(kw => tags.includes(kw));
-        const subgroupHasPosts = POSTS.some(post =>
-          post.tags.includes(mainTag) && post.tags.includes(subTag)
-        );
-
-        // 跳过既没有文章也没有关键词的分组
-        if (!subgroupHasPosts && visibleKeywords.length === 0) continue;
-
-        html += `<div class="tag-subgroup">`;
-
-        // 子分组标签（可点击筛选该子分类下所有文章）
-        if (subgroupHasPosts) {
-          html += `<span class="tag tag-sub ${this.currentTag === combinedTag ? 'active' : ''}" data-tag="${combinedTag}" data-parent="${mainTag}">${subTag}</span>`;
-        }
-
-        // 关键词标签
-        if (visibleKeywords.length > 0) {
-          html += `<div class="tag-subgroup-tags">`;
-          for (const kw of visibleKeywords) {
-            const kwCombinedTag = `${mainTag}/${kw}`;
-            html += `<span class="tag tag-keyword ${this.currentTag === kwCombinedTag ? 'active' : ''}" data-tag="${kwCombinedTag}" data-parent="${mainTag}">${kw}</span>`;
-          }
+      // 项目集特殊处理：实习项目作为子标签
+      if (isProject) {
+        if (hasMainPosts) {
+          html += `<div class="tag-subgroup">`;
+          html += `<span class="tag tag-sub tag-special ${this.currentTag === '项目集/实习项目' ? 'active' : ''}" data-tag="项目集/实习项目" data-parent="项目集">实习项目</span>`;
+          html += `<span class="tag-toolbar-info">${projectPosts.length} 篇</span>`;
           html += `</div>`;
         }
-
+        html += `<div class="tag-subgroup-children">`;
+        html += renderHierarchyLevel(subGroups, mainTag, 'tag-nested-level');
         html += `</div>`;
+      } else {
+        html += renderHierarchyLevel(subGroups, mainTag, '');
       }
 
       html += `</div>`;
@@ -183,14 +203,13 @@ const Blog = {
 
     let posts = POSTS;
 
-    // 按标签筛选（支持组合标签如 "STM32/模块"）
+    // 按标签筛选（支持组合标签如 "STM32/模块"、"项目集/实习项目/项目名"）
     if (this.currentTag) {
       if (this.currentTag.includes('/')) {
-        // 组合标签: "父分类/子分类"
-        const [parentTag, childTag] = this.currentTag.split('/');
-        posts = POSTS.filter(post =>
-          post.tags.includes(parentTag) && post.tags.includes(childTag)
-        );
+        // 组合标签: 取最后一段作为实际匹配标签
+        const parts = this.currentTag.split('/');
+        const lastPart = parts[parts.length - 1];
+        posts = POSTS.filter(post => post.tags.includes(lastPart));
       } else {
         // 普通标签
         posts = getPostsByTag(this.currentTag);
