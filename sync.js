@@ -3,11 +3,20 @@ const fs = require('fs');
 const path = require('path');
 
 // 配置：要同步的仓库路径
+// tag：主分类标签
+// extraTags（可选）：补充标签，用于自定义分类（如"实习项目/竞赛项目"、细分方向）
+// skipFolders（可选）：这些文件夹名不计入标签
 const VAULTS = [
   { path: 'D:/blog/blog/blog_stm32', tag: 'STM32' },
   { path: 'D:/blog/blog/blog_esp32', tag: 'ESP32' },
   { path: 'D:/blog/blog/blog_硬件', tag: '硬件' },
-  { path: 'D:/blog/blog/blog_项目（上海梦孚）', tag: '基于步态相位检测与空间触觉同步干扰的智能长袜系统' },
+  { path: 'D:/blog/blog/blog_项目集/上海梦孚教育科技公司（2026）', tag: '项目集' },
+  {
+    path: 'D:/blog/blog/blog_项目集/2025年全国大学生电子设计大赛E题简易自行瞄准装置',
+    tag: '项目集',
+    extraTags: ['2025年电赛E题简易自行瞄准装置', 'STM32', 'PCB', '硬件设计'],
+    skipFolders: ['主要负责'],
+  },
 ];
 
 const BLOG_DIR = 'D:/blog/blog_wbsite';
@@ -78,7 +87,8 @@ function cleanFolderName(name, isRoot) {
 }
 
 // 从文件路径提取层级标签
-function extractTagsFromPath(filePath, vaultPath) {
+function extractTagsFromPath(filePath, vaultPath, skipFolders) {
+  const skip = skipFolders || [];
   const relativePath = filePath.replace(/\\/g, '/');
   const vaultNormalized = vaultPath.replace(/\\/g, '/');
 
@@ -91,7 +101,7 @@ function extractTagsFromPath(filePath, vaultPath) {
   for (let i = 0; i < parts.length; i++) {
     const part = parts[i];
     // 跳过 .obsidian、图片介绍
-    if (part === '.obsidian' || part === '图片介绍') continue;
+    if (part === '.obsidian' || part === '图片介绍' || skip.includes(part)) continue;
     if (part.endsWith('.md')) continue; // 跳过文件名
 
     // 清理文件夹名称
@@ -159,7 +169,9 @@ function extractTagsFromFilename(fileName) {
 }
 
 // 解析 Markdown 文件
-function parseMdFile(filePath, vaultTag, imageMap, vaultPath) {
+function parseMdFile(filePath, vault, imageMap) {
+  const vaultTag = vault.tag;
+  const vaultPath = vault.path;
   try {
     let content = fs.readFileSync(filePath, 'utf-8');
     const fileName = path.basename(filePath, '.md');
@@ -191,14 +203,14 @@ function parseMdFile(filePath, vaultTag, imageMap, vaultPath) {
       .replace(/^-|-$/g, '');
 
     // 从文件夹路径提取层级标签
-    const folderTags = extractTagsFromPath(filePath, vaultPath);
+    const folderTags = extractTagsFromPath(filePath, vaultPath, vault.skipFolders);
 
     // 从文件名提取额外标签
     const filenameTags = extractTagsFromFilename(fileName);
 
     // 合并所有标签，避免重复（忽略大小写）
     const tags = [];
-    const allTags = [vaultTag, ...folderTags, ...filenameTags];
+    const allTags = [vaultTag, ...folderTags, ...filenameTags, ...(vault.extraTags || [])];
     for (const tag of allTags) {
       const lowerTags = tags.map(t => t.toLowerCase());
       if (!lowerTags.includes(tag.toLowerCase())) {
@@ -331,7 +343,7 @@ function main() {
     console.log(`   📝 找到 ${files.length} 个 .md 文件`);
 
     for (const file of files) {
-      const post = parseMdFile(file, vault.tag, imageMap, vault.path);
+      const post = parseMdFile(file, vault, imageMap);
       if (post) {
         allPosts.push(post);
         console.log(`   ✅ ${post.title}`);
