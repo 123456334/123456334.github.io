@@ -117,21 +117,19 @@ const Blog = {
 
     // 项目集特殊分类（项目集 → 实习经历/项目经历 → 具体项目 → 子分组 → 关键词）
     // 支持任意层级嵌套渲染
-    // skipSpan：本层标签已由外部渲染（如项目集的实习经历/项目经历），只渲染内层
-    function renderHierarchyLevel(groupObj, parentPath, indentClass, skipSpan) {
+    function renderHierarchyLevel(groupObj, parentPath, indentClass) {
       let out = '';
       for (const [tag, value] of Object.entries(groupObj)) {
         const currentPath = parentPath ? `${parentPath}/${tag}` : tag;
         const hasPosts = POSTS.some(post => post.tags.includes(tag));
-        const showSpan = hasPosts && !skipSpan;
 
         // 如果 value 是数组，说明是叶子关键词列表
         if (Array.isArray(value)) {
           const visibleKeywords = value.filter(kw => tags.includes(kw));
-          if (visibleKeywords.length === 0 && !showSpan) continue;
+          if (visibleKeywords.length === 0 && !hasPosts) continue;
 
           out += `<div class="tag-subgroup ${indentClass || ''}">`;
-          if (showSpan) {
+          if (hasPosts) {
             out += `<span class="tag tag-sub ${this.currentTag === currentPath ? 'active' : ''}" data-tag="${currentPath}" data-parent="${parentPath || ''}">${tag}</span>`;
           }
           if (visibleKeywords.length > 0) {
@@ -147,7 +145,7 @@ const Blog = {
         // 否则是嵌套对象，递归渲染（子标签 + 内层）
         else {
           out += `<div class="tag-subgroup tag-subgroup-nested ${indentClass || ''}">`;
-          if (showSpan) {
+          if (hasPosts) {
             out += `<span class="tag tag-sub ${this.currentTag === currentPath ? 'active' : ''}" data-tag="${currentPath}" data-parent="${parentPath || ''}">${tag}</span>`;
           }
           out += `<div class="tag-subgroup-children">`;
@@ -167,22 +165,25 @@ const Blog = {
       html += `<div class="tag-category-header"><span class="bracket">【</span>${isProject ? '🎓 ' : ''}${mainTag}<span class="bracket">】</span></div>`;
       html += `<div class="tag-category-body">`;
 
-      // 项目集特殊处理：实习经历 / 项目经历 作为一级子标签
+      // 项目集特殊处理：实习经历 / 项目经历 各自成组（分组标签 + 自己的下级列表），两类互不混在一起
       if (isProject) {
         if (hasMainPosts) {
-          html += `<div class="tag-subgroup">`;
           for (const groupTag of Object.keys(subGroups)) {
             const groupPosts = POSTS.filter(p => p.tags.includes(groupTag));
             if (groupPosts.length === 0) continue;
             const groupPath = `${mainTag}/${groupTag}`;
+
+            html += `<div class="tag-subgroup tag-subgroup-nested tag-nested-level">`;
+            html += `<div class="tag-subgroup">`;
             html += `<span class="tag tag-sub tag-special ${this.currentTag === groupPath ? 'active' : ''}" data-tag="${groupPath}" data-parent="${mainTag}">${groupTag}</span>`;
             html += `<span class="tag-toolbar-info">${groupPosts.length} 篇</span>`;
+            html += `</div>`;
+            html += `<div class="tag-subgroup-children">`;
+            html += renderHierarchyLevel(subGroups[groupTag], groupPath, 'tag-nested-level');
+            html += `</div>`;
+            html += `</div>`;
           }
-          html += `</div>`;
         }
-        html += `<div class="tag-subgroup-children">`;
-        html += renderHierarchyLevel(subGroups, mainTag, 'tag-nested-level', true);
-        html += `</div>`;
       } else {
         html += renderHierarchyLevel(subGroups, mainTag, '');
       }
