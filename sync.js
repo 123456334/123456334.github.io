@@ -4,17 +4,21 @@ const path = require('path');
 
 // 配置：要同步的仓库路径
 // tag：主分类标签
-// extraTags（可选）：补充标签，用于自定义分类（如"实习项目/竞赛项目"、细分方向）
+// extraTags（可选）：补充标签，紧跟主分类标签之后，用于自定义分类（如"实习经历/项目经历"、细分方向）
 // skipFolders（可选）：这些文件夹名不计入标签
 const VAULTS = [
   { path: 'D:/blog/blog/blog_stm32', tag: 'STM32' },
   { path: 'D:/blog/blog/blog_esp32', tag: 'ESP32' },
   { path: 'D:/blog/blog/blog_硬件', tag: '硬件' },
-  { path: 'D:/blog/blog/blog_项目集/上海梦孚教育科技公司（2026）', tag: '项目集' },
+  {
+    path: 'D:/blog/blog/blog_项目集/上海梦孚教育科技公司（2026）',
+    tag: '项目集',
+    extraTags: ['实习经历'],
+  },
   {
     path: 'D:/blog/blog/blog_项目集/2025年全国大学生电子设计大赛E题简易自行瞄准装置',
     tag: '项目集',
-    extraTags: ['2025年电赛E题简易自行瞄准装置', 'STM32', 'PCB', '硬件设计'],
+    extraTags: ['项目经历', '2025年电赛E题简易自行瞄准装置', 'PCB', '硬件设计'],
     skipFolders: ['主要负责'],
   },
 ];
@@ -210,7 +214,7 @@ function parseMdFile(filePath, vault, imageMap) {
 
     // 合并所有标签，避免重复（忽略大小写）
     const tags = [];
-    const allTags = [vaultTag, ...folderTags, ...filenameTags, ...(vault.extraTags || [])];
+    const allTags = [vaultTag, ...(vault.extraTags || []), ...folderTags, ...filenameTags];
     for (const tag of allTags) {
       const lowerTags = tags.map(t => t.toLowerCase());
       if (!lowerTags.includes(tag.toLowerCase())) {
