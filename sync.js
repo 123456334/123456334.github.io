@@ -21,6 +21,11 @@ const VAULTS = [
     extraTags: ['项目经历', '2025年电赛E题简易自行瞄准装置', 'PCB', '硬件设计'],
     skipFolders: ['主要负责'],
   },
+  {
+    path: 'D:/blog/blog/blog_项目集/无刷电机驱动bldc（2025-2026）',
+    tag: '项目集',
+    extraTags: ['项目经历', '无刷电机驱动bldc'],
+  },
 ];
 
 const BLOG_DIR = 'D:/blog/blog_wbsite';
@@ -51,9 +56,9 @@ function getAllFiles(dir, extensions) {
   return results;
 }
 
-// 复制图片到 assets 目录
+// 复制图片/视频到 assets 目录
 function copyImages(vaultPath) {
-  const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'];
+  const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.mp4', '.webm'];
   const images = getAllFiles(vaultPath, imageExtensions);
   const imageMap = {};
 
@@ -179,6 +184,13 @@ function parseMdFile(filePath, vault, imageMap) {
   try {
     let content = fs.readFileSync(filePath, 'utf-8');
     const fileName = path.basename(filePath, '.md');
+
+    // 转换 Obsidian 视频语法: ![[video.mp4]] -> <video controls> 标签
+    content = content.replace(/!\[\[([^\]]+\.(?:mp4|webm))\]\]/gi, (match, videoName) => {
+      const cleanName = videoName.trim();
+      const src = imageMap[cleanName] || `assets/${cleanName}`;
+      return `<video src="${src}" controls preload="metadata"></video>`;
+    });
 
     // 转换 Obsidian 图片语法: ![[image.png]] -> ![image](assets/image.png)
     content = content.replace(/!\[\[([^\]]+\.\w+)\]\]/g, (match, imageName) => {

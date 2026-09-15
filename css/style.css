@@ -770,6 +770,18 @@ a:hover {
   transition: var(--transition-normal);
 }
 
+/* 视频样式 */
+.post-content video {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: var(--spacing-lg) auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-card);
+  background: #000;
+}
+
 .post-content h1 { font-size: 2rem; }
 .post-content h2 { font-size: 1.6rem; }
 .post-content h3 { font-size: 1.3rem; }
