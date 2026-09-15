@@ -6,6 +6,7 @@ const path = require('path');
 // tag：主分类标签
 // extraTags（可选）：补充标签，紧跟主分类标签之后，用于自定义分类（如"实习经历/项目经历"、细分方向）
 // skipFolders（可选）：这些文件夹名不计入标签
+// fileTags（可选）：按文件名指定的补充标签（笔记名 -> 标签数组），用于把同类笔记归到同一个子标签
 const VAULTS = [
   { path: 'D:/blog/blog/blog_stm32', tag: 'STM32' },
   { path: 'D:/blog/blog/blog_esp32', tag: 'ESP32' },
@@ -25,6 +26,15 @@ const VAULTS = [
     path: 'D:/blog/blog/blog_项目集/无刷电机驱动bldc（2025-2026）',
     tag: '项目集',
     extraTags: ['项目经历', '无刷电机驱动bldc'],
+    // 按笔记类型细分，避免整个项目挤在同一个标签下（硬件电路那 5 篇由文件夹名自动归类）
+    fileTags: {
+      '原理.md': ['原理'],
+      '代码.md': ['代码'],
+      '实物.md': ['实物测试'],
+      '问题.md': ['调试问题'],
+      '项目简历.md': ['简历'],
+      '项目简历-简要版.md': ['简历'],
+    },
   },
 ];
 
@@ -224,9 +234,12 @@ function parseMdFile(filePath, vault, imageMap) {
     // 从文件名提取额外标签
     const filenameTags = extractTagsFromFilename(fileName);
 
+    // 按文件名指定的补充标签
+    const fileTags = (vault.fileTags || {})[path.basename(filePath)] || [];
+
     // 合并所有标签，避免重复（忽略大小写）
     const tags = [];
-    const allTags = [vaultTag, ...(vault.extraTags || []), ...folderTags, ...filenameTags];
+    const allTags = [vaultTag, ...(vault.extraTags || []), ...folderTags, ...fileTags, ...filenameTags];
     for (const tag of allTags) {
       const lowerTags = tags.map(t => t.toLowerCase());
       if (!lowerTags.includes(tag.toLowerCase())) {
