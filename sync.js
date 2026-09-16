@@ -6,6 +6,7 @@ const path = require('path');
 // tag：主分类标签
 // extraTags（可选）：补充标签，紧跟主分类标签之后，用于自定义分类（如"实习经历/项目经历"、细分方向）
 // skipFolders（可选）：这些文件夹名不计入标签
+// excludeFiles（可选）：这些笔记不发布到网站
 // fileTags（可选）：按文件名指定的补充标签（笔记名 -> 标签数组），用于把同类笔记归到同一个子标签
 const VAULTS = [
   { path: 'D:/blog/blog/blog_stm32', tag: 'STM32' },
@@ -26,14 +27,13 @@ const VAULTS = [
     path: 'D:/blog/blog/blog_项目集/无刷电机驱动bldc（2025-2026）',
     tag: '项目集',
     extraTags: ['项目经历', '无刷电机驱动bldc'],
+    // 这两类笔记不发布到网站
+    excludeFiles: ['原理.md', '项目简历.md', '项目简历-简要版.md'],
     // 按笔记类型细分，避免整个项目挤在同一个标签下（硬件电路那 5 篇由文件夹名自动归类）
     fileTags: {
-      '原理.md': ['原理'],
       '代码.md': ['代码'],
       '实物.md': ['实物测试'],
       '问题.md': ['调试问题'],
-      '项目简历.md': ['简历'],
-      '项目简历-简要版.md': ['简历'],
     },
   },
 ];
@@ -372,6 +372,12 @@ function main() {
     console.log(`   📝 找到 ${files.length} 个 .md 文件`);
 
     for (const file of files) {
+      // 不发布的笔记
+      if ((vault.excludeFiles || []).includes(path.basename(file))) {
+        console.log(`   ⏭️  跳过（不发布）: ${path.basename(file)}`);
+        continue;
+      }
+
       const post = parseMdFile(file, vault, imageMap);
       if (post) {
         allPosts.push(post);
